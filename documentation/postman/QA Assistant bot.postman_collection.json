@@ -1,0 +1,482 @@
+{
+	"info": {
+		"_postman_id": "d371fb06-8820-49f2-8efd-59e6819bcf2e",
+		"name": "QA Assistant bot",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Get me",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{botToken}}/getMe",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{botToken}}",
+						"getMe"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Get Updates",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let updateResponse = pm.response.json()\r",
+							"\r",
+							"console.log(updateResponse)\r",
+							"pm.environment.set(\"chatId\", updateResponse.result[0].message.chat.id)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{botToken}}/getUpdates",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{botToken}}",
+						"getUpdates"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Send Hello message",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var text = \"Привет. Я бот, помогающий построить Q%26A сессию. Выбери сессию, в которой ты хочешь участвовать:\"\r",
+							"var reply_markup = {\r",
+							"    inline_keyboard: [\r",
+							"        [\r",
+							"            {\r",
+							"                text: \"Проповедь о хлебе\",\r",
+							"                callback_data: \"session#1\"\r",
+							"            }\r",
+							"        ],\r",
+							"        [\r",
+							"            {\r",
+							"                text: \"Проповедь о рыбе\",\r",
+							"                callback_data: \"session#2\"\r",
+							"            }\r",
+							"        ]\r",
+							"    ]\r",
+							"}\r",
+							"pm.request.addQueryParams(\"text=\" + text);\r",
+							"pm.request.addQueryParams(\"reply_markup=\" + JSON.stringify(reply_markup));\r",
+							"console.log(pm.request.url.query)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{botToken}}/sendMessage?chat_id={{chatId}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{botToken}}",
+						"sendMessage"
+					],
+					"query": [
+						{
+							"key": "chat_id",
+							"value": "{{chatId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. Get Callback",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let callback_query = pm.response.json().result\r",
+							"    .filter(result => result.callback_query != null)[0]\r",
+							"\r",
+							"pm.environment.set(\"callbackId\", callback_query.id)\r",
+							"pm.environment.set(\"session\", callback_query.data)\r",
+							"    "
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{botToken}}/getUpdates?allowed_updates=[“callback_query”]",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{botToken}}",
+						"getUpdates"
+					],
+					"query": [
+						{
+							"key": "allowed_updates",
+							"value": "[“callback_query”]"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "5. Send Session Info",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var text = \"Входим в сессию\" + pm.environment.get(\"session\") + \" (Will be replace with session name)\"\r",
+							"pm.request.addQueryParams(\"text=\" + text);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{botToken}}/sendMessage?chat_id={{chatId}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{botToken}}",
+						"sendMessage"
+					],
+					"query": [
+						{
+							"key": "chat_id",
+							"value": "{{chatId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6. Send Question#1",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var text = \"*Anonymous:* Почему вы проповедуете о еде? Вы что, голодный?\"\r",
+							"var reply_markup = {\r",
+							"    inline_keyboard: [\r",
+							"        [\r",
+							"            {\r",
+							"                text: \"\\ud83d\\udc4d 2\",\r",
+							"                callback_data: \"like\"\r",
+							"            }\r",
+							"        ]\r",
+							"    ]\r",
+							"}\r",
+							"var parse_mode = \"MarkdownV2\"\r",
+							"pm.request.addQueryParams(\"text=\" + text);\r",
+							"pm.request.addQueryParams(\"reply_markup=\" + JSON.stringify(reply_markup));\r",
+							"pm.request.addQueryParams(\"parse_mode=\" + parse_mode)\r",
+							"console.log(pm.request.url.query)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{botToken}}/sendMessage?chat_id={{chatId}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{botToken}}",
+						"sendMessage"
+					],
+					"query": [
+						{
+							"key": "chat_id",
+							"value": "{{chatId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "7. Send Question#2",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var text = \"*Anonymous:* Как вас ещё не отлучили за такую ересь\\\\!?\"\r",
+							"var reply_markup = {\r",
+							"    inline_keyboard: [\r",
+							"        [\r",
+							"            {\r",
+							"                text: \"\\ud83d\\udc4d 4\",\r",
+							"                callback_data: \"like\"\r",
+							"            }\r",
+							"        ]\r",
+							"    ]\r",
+							"}\r",
+							"var parse_mode = \"MarkdownV2\"\r",
+							"pm.request.addQueryParams(\"text=\" + text);\r",
+							"pm.request.addQueryParams(\"reply_markup=\" + JSON.stringify(reply_markup));\r",
+							"pm.request.addQueryParams(\"parse_mode=\" + parse_mode)\r",
+							"console.log(pm.request.url.query)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{botToken}}/sendMessage?chat_id={{chatId}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{botToken}}",
+						"sendMessage"
+					],
+					"query": [
+						{
+							"key": "chat_id",
+							"value": "{{chatId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "8. Send Question#3",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var text = \"*Anonymous:* Так можно всё\\\\-таки грешить или нет? Благодать же всё покроет\"\r",
+							"var reply_markup = {\r",
+							"    inline_keyboard: [\r",
+							"        [\r",
+							"            {\r",
+							"                text: \"\\ud83d\\udc4d 5\",\r",
+							"                callback_data: \"like\"\r",
+							"            }\r",
+							"        ]\r",
+							"    ]\r",
+							"}\r",
+							"var parse_mode = \"MarkdownV2\"\r",
+							"pm.request.addQueryParams(\"text=\" + text);\r",
+							"pm.request.addQueryParams(\"reply_markup=\" + JSON.stringify(reply_markup));\r",
+							"pm.request.addQueryParams(\"parse_mode=\" + parse_mode)\r",
+							"console.log(pm.request.url.query)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{botToken}}/sendMessage?chat_id={{chatId}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{botToken}}",
+						"sendMessage"
+					],
+					"query": [
+						{
+							"key": "chat_id",
+							"value": "{{chatId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "9. Send \"Type Question\" message",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var text = \"Хорошо, напиши свой вопрос:\"\r",
+							"var reply_markup = {\r",
+							"    remove_keyboard: true\r",
+							"}\r",
+							"var parse_mode = \"MarkdownV2\"\r",
+							"pm.request.addQueryParams(\"text=\" + text);\r",
+							"pm.request.addQueryParams(\"reply_markup=\" + JSON.stringify(reply_markup));\r",
+							"pm.request.addQueryParams(\"parse_mode=\" + parse_mode)\r",
+							"console.log(pm.request.url.query)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{botToken}}/sendMessage?chat_id={{chatId}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{botToken}}",
+						"sendMessage"
+					],
+					"query": [
+						{
+							"key": "chat_id",
+							"value": "{{chatId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "10. Introduction request",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var text = \"Хорошо, напиши свой вопрос:\"\r",
+							"var reply_markup = {\r",
+							"    remove_keyboard: true\r",
+							"}\r",
+							"var parse_mode = \"MarkdownV2\"\r",
+							"pm.request.addQueryParams(\"text=\" + text);\r",
+							"pm.request.addQueryParams(\"reply_markup=\" + JSON.stringify(reply_markup));\r",
+							"pm.request.addQueryParams(\"parse_mode=\" + parse_mode)\r",
+							"console.log(pm.request.url.query)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.telegram.org/bot{{botToken}}/sendMessage?chat_id={{chatId}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"telegram",
+						"org"
+					],
+					"path": [
+						"bot{{botToken}}",
+						"sendMessage"
+					],
+					"query": [
+						{
+							"key": "chat_id",
+							"value": "{{chatId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "botToken",
+			"value": "//insert_bot_token_here//",
+			"type": "string"
+		}
+	]
+}
